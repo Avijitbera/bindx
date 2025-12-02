@@ -11,7 +11,7 @@ class Concurrent {
   final Duration throttleDuration;
 
   const Concurrent({
-    required this.maxConcurrent,
+    this.maxConcurrent = 1,
     this.queueKey,
     this.priority = 0,
     this.debounce = false,
