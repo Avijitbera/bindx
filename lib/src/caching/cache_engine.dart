@@ -1,9 +1,85 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stategen/src/annotations/cache_annotation.dart';
+import 'package:stategen/src/caching/disk_storage.dart';
 
 class CacheEngine {
   final Map<String, CacheEntry> _memoryCache = {};
+  late SharedPreferences _prefs;
+  final List<CacheStorage> _storage = [];
+
+  CacheEngine() {
+    _init();
+  }
+
+  Future<void> _init() async {
+    _prefs = await SharedPreferences.getInstance();
+    _storage.add(MemoryStorage());
+    _storage.add(DiskStorage(_prefs));
+  }
+
+  Future<void> set<T>(
+    String key,
+    T value, {
+    Duration duration = const Duration(minutes: 30),
+    String? tag,
+    CacheStrategy strategy = CacheStrategy.memory,
+  }) async {
+    final entry = CacheEntry(
+      value: value,
+      expiry: DateTime.now().add(duration),
+      tag: tag,
+    );
+    switch (strategy) {
+      case CacheStrategy.memory:
+        await _storage[0].set(key, entry);
+        break;
+      case CacheStrategy.disk:
+        await _storage[1].set(key, entry);
+        break;
+      case CacheStrategy.memoryFirst:
+        await _storage[0].set(key, entry);
+        await _storage[1].set(key, entry);
+        break;
+      case CacheStrategy.diskFirst:
+        await _storage[1].set(key, entry);
+        await _storage[0].set(key, entry);
+        break;
+    }
+  }
+
+  Future<void> invalidateByTag(String tag) async {
+    for (final storage in _storage) {
+      await storage.invalidateByTag(tag);
+    }
+  }
+
+  Future<void> clear() async {
+    for (final storage in _storage) {
+      await storage.clear();
+    }
+  }
+
+  Future<T?> get<T>(
+    String key, {
+    CacheStrategy strategy = CacheStrategy.memoryFirst,
+  }) async {
+    switch (strategy) {
+      case CacheStrategy.memoryFirst:
+        final memory = await _storage[0].get<T>(key);
+        if (memory != null) return memory;
+        return await _storage[1].get<T>(key);
+      case CacheStrategy.diskFirst:
+        final disk = await _storage[1].get<T>(key);
+        if (disk != null) return disk;
+        return await _storage[0].get<T>(key);
+      case CacheStrategy.memory:
+        return await _storage[0].get<T>(key);
+      case CacheStrategy.disk:
+        return await _storage[1].get<T>(key);
+    }
+  }
 }
 
 class CacheEntry<T> {
@@ -69,62 +145,5 @@ class MemoryStorage implements CacheStorage {
   @override
   Future<void> clear() async {
     _cache.clear();
-  }
-}
-
-class DiskStorage implements CacheStorage {
-  final SharedPreferences _prefs;
-  static const String _prefix = 'bindx_cache_';
-
-  DiskStorage(this._prefs);
-
-  @override
-  Future<void> clear() async {
-    final keys = _prefs.getKeys().where((key) => key.startsWith(_prefix));
-    for (final key in keys) {
-      _prefs.remove(key);
-    }
-  }
-
-  @override
-  Future<T?> get<T>(String key) async {
-    final entryJson = _prefs.getString('$_prefix$key');
-    if (entryJson == null) {
-      return null;
-    }
-    final entry = CacheEntry.fromJson(
-      jsonDecode(entryJson) as Map<String, dynamic>,
-    );
-    if (entry.isExpired) {
-      await invalidate(key);
-      return null;
-    }
-    return entry.value;
-  }
-
-  @override
-  Future<void> invalidate(String key) async {
-    await _prefs.remove('$_prefix$key');
-  }
-
-  @override
-  Future<void> invalidateByTag(String tag) async {
-    final keys = _prefs.getKeys().where(
-      (element) => element.startsWith(_prefix),
-    );
-    for (final key in keys) {
-      final json = _prefs.getString(key);
-      if (json != null) {
-        final map = jsonDecode(json) as Map<String, dynamic>;
-        if (map['tag'] == tag) {
-          await _prefs.remove(key);
-        }
-      }
-    }
-  }
-
-  @override
-  Future<void> set<T>(String key, CacheEntry<T> entry) async {
-    await _prefs.setString('$_prefix$key', jsonEncode(entry.toJson()));
   }
 }
