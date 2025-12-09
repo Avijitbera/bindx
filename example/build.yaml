@@ -1,0 +1,9 @@
+targets:
+  $default:
+    builders:
+      source_gen|combining_builder:
+        enabled: true
+        options:
+          ignore_for_file:
+            - type_annotate_public_apis
+            - lines_longer_than_80_chars

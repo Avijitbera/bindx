@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:stategen/src/caching/cache_engine.dart';
-import 'package:stategen/src/concurrency/task_manager.dart';
+import 'package:bindx/src/annotations/cache_annotation.dart';
+import 'package:bindx/src/caching/cache_engine.dart';
+import 'package:bindx/src/concurrency/task_manager.dart';
 
 import '../annotations/concurrent_annotation.dart';
 
@@ -46,6 +47,7 @@ class BindXStore<T> extends ChangeNotifier {
     _state = result;
   }
 
+  @Cache(duration: Duration(minutes: 5))
   Future<R> cachedGet<R>(
     String key,
     Future<R> Function() compute, {

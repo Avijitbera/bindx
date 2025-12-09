@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:stategen/src/annotations/cache_annotation.dart';
-import 'package:stategen/src/caching/disk_storage.dart';
+import 'package:bindx/src/annotations/cache_annotation.dart';
+import 'package:bindx/src/caching/disk_storage.dart';
 
 class CacheEngine {
   final Map<String, CacheEntry> _memoryCache = {};

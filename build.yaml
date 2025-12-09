@@ -1,0 +1,9 @@
+builders:
+  bindx_generator:
+    import: "package:stategen/src/codegen/bindx_generator.dart"
+    builder_factories: ["bindxGenerator"]
+    build_extensions: { ".dart": [".bindx.dart"] }
+    auto_apply: dependents
+    build_to: source
+    runs_before: []
+    applies_builders: []

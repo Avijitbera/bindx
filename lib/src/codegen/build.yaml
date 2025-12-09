@@ -1,0 +1,14 @@
+targets:
+  $default:
+    builders:
+      bindx_generator:
+        generate_for:
+          - lib/*.dart
+          - lib/src/models/*.dart
+  builders:
+    bindx_generator:
+      import: "package:stategen/src/codegen/bindx_generator.dart"
+      build_extensions: { ".dart": [.bindx.dart] }
+      builder_factories: [bindx_generator]
+      auto_apply: dependents
+      build_to: source

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:stategen/src/caching/cache_engine.dart';
+import 'package:bindx/src/caching/cache_engine.dart';
 
 class DiskStorage implements CacheStorage {
   final SharedPreferences _prefs;

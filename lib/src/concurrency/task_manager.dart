@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:stategen/src/annotations/concurrent_annotation.dart';
-import 'package:stategen/src/concurrency/task_queue.dart';
+import 'package:bindx/src/annotations/concurrent_annotation.dart';
+import 'package:bindx/src/concurrency/task_queue.dart';
 
 class TaskManager {
   final Map<String, TaskQueue> _queues = {};
