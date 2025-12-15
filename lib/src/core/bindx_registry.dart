@@ -41,8 +41,21 @@ class BindxRegistry {
     return stores[name] as T;
   }
 
+  dynamic getByType(Type type, {String? name}) {
+    final stores = _stores[type];
+    if (stores == null || !stores.containsKey(name)) {
+      throw StateError("Store of type $type with name $name not found");
+    }
+
+    return stores[name];
+  }
+
   bool exists<T>({String? name}) {
     return _stores.containsKey(T) && _stores[T]!.containsKey(name);
+  }
+
+  bool existsByType(Type type, {String? name}) {
+    return _stores.containsKey(type) && _stores[type]!.containsKey(name);
   }
 
   void remove<T>({String? name}) {

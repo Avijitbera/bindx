@@ -22,8 +22,8 @@ class BindXProvider<T extends BindXStore> extends StatefulWidget {
     bool listen = true,
   }) {
     final provider = listen
-        ? context.dependOnInheritedWidgetOfExactType<_BindXProviderScope<T>>()
-        : context.getInheritedWidgetOfExactType<_BindXProviderScope<T>>();
+        ? context.dependOnInheritedWidgetOfExactType<BindXProviderScope<T>>()
+        : context.getInheritedWidgetOfExactType<BindXProviderScope<T>>();
 
     if (provider != null) {
       return provider.store;
@@ -74,21 +74,21 @@ class _BindXProviderState<T extends BindXStore>
 
   @override
   Widget build(BuildContext context) {
-    return _BindXProviderScope<T>(store: widget.store, child: widget.child);
+    return BindXProviderScope<T>(store: widget.store, child: widget.child);
   }
 }
 
-class _BindXProviderScope<T extends BindXStore> extends InheritedWidget {
+class BindXProviderScope<T extends BindXStore> extends InheritedWidget {
   final T store;
 
-  const _BindXProviderScope({
+  const BindXProviderScope({
     Key? key,
     required this.store,
     required Widget child,
   }) : super(key: key, child: child);
 
   @override
-  bool updateShouldNotify(covariant _BindXProviderScope oldWidget) {
+  bool updateShouldNotify(covariant BindXProviderScope oldWidget) {
     return store != oldWidget.store;
   }
 }
