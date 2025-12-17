@@ -16,6 +16,8 @@ class BindXStore<T> extends ChangeNotifier {
   final TaskManager _taskManager;
   final Map<String, dynamic> _computedCache = {};
 
+  final StreamController<T> _stateController = StreamController<T>.broadcast();
+
   BindXStore(
     T initialState, {
     CacheEngine? cacheEngine,
@@ -29,6 +31,7 @@ class BindXStore<T> extends ChangeNotifier {
 
   T get state => _state;
   T get initialState => _initialState;
+  Stream<T> get stream => _stateController.stream;
 
   void _processAnnotations() {}
 
@@ -45,6 +48,10 @@ class BindXStore<T> extends ChangeNotifier {
     );
 
     _state = result;
+    if (notify) {
+      notifyListeners();
+      _stateController.add(_state);
+    }
   }
 
   @Cache(duration: Duration(minutes: 5))
@@ -99,7 +106,10 @@ class BindXStore<T> extends ChangeNotifier {
 
   @override
   void dispose() {
-    _streamControllers.values.forEach((controller) => controller.close());
+    _stateController.close();
+    for (final controller in _streamControllers.values) {
+      controller.close();
+    }
     super.dispose();
   }
 }
