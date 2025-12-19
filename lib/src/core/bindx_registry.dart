@@ -10,6 +10,7 @@ class BindxRegistry {
   BindxRegistry._internal();
 
   final Map<Type, Map<String?, dynamic>> _stores = {};
+  Map<Type, Map<String?, dynamic>> get stores => _stores;
   final Map<String, dynamic> _namedStores = {};
   final Map<Type, List<VoidCallback>> _listeners = {};
 
@@ -58,20 +59,21 @@ class BindxRegistry {
     return _stores.containsKey(type) && _stores[type]!.containsKey(name);
   }
 
-  void remove<T>({String? name}) {
-    final stores = _stores[T];
+  void remove<T>({String? name, Type? type}) {
+    final targetType = type ?? T;
+    final stores = _stores[targetType];
     if (stores != null) {
       final store = stores.remove(name);
       if (store is BindXStore) {
         store.dispose();
       }
       if (name != null) {
-        _namedStores.remove('$T#$name');
+        _namedStores.remove('$targetType#$name');
       }
       if (stores.isEmpty) {
-        _stores.remove(T);
+        _stores.remove(targetType);
       }
-      _notifyListeners(T);
+      _notifyListeners(targetType);
     }
   }
 
