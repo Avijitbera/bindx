@@ -29,3 +29,6 @@ export 'src/caching/disk_storage.dart';
 
 export 'src/concurrency/task_manager.dart';
 export 'src/concurrency/task_queue.dart';
+
+export 'src/extensions/future_ext.dart';
+export 'src/extensions/stream_ext.dart';

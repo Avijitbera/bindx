@@ -1,7 +1,10 @@
 name: bindx
-description: "A new Flutter package project."
+description: A powerful, annotation-based state management library for Flutter with reactive programming and advanced async features.
 version: 0.0.1
-# homepage:
+homepage: https://github.com/Avijitbera/bindx
+repository: https://github.com/Avijitbera/bindx
+issue_tracker: https://github.com/Avijitbera/bindx/issues
+documentation: https://github.com/Avijitbera/bindx#readme
 
 environment:
   sdk: ^3.9.2
@@ -10,6 +13,7 @@ environment:
 dependencies:
   analyzer: ^8.4.1
   build: ^3.0.0
+  collection: ^1.18.0
   crypto: ^3.0.7
   dartz: ^0.10.1
   flutter:
