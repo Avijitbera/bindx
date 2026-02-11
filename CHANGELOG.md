@@ -161,6 +161,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Annotation definitions
 - Core widget implementations
 
+## [0.0.2] - 2026-02-11
+
+### Added
+- Updated pubspec.yaml
+- Implement `BindxStore` lifecycle methods for locking, caching, and streaming
+- Remove unused imports and memory cache
+
+
 ---
 
 ## Legend

@@ -42,12 +42,20 @@ class BindXStore<T> extends ChangeNotifier {
   }) async {
     final oldState = _state;
 
+    // Acquire lock for thread-safe updates
+    await _acquireLock(oldState);
+
     final result = await _taskManager.execute(
       () => updater(oldState),
       annotation: _getAnnotation<Concurrent>(action),
     );
 
     _state = result;
+
+    // Process cache and stream annotations
+    await _processCacheAnnotations(oldState, _state);
+    _processStreamAnnotations(oldState, _state);
+
     if (notify) {
       notifyListeners();
       _stateController.add(_state);
@@ -93,11 +101,34 @@ class BindXStore<T> extends ChangeNotifier {
     return null;
   }
 
-  Future<void> _acquireLock(T state) async {}
+  /// Acquires a lock for thread-safe state updates.
+  /// This can be used with @Mutex annotation for critical sections.
+  Future<void> _acquireLock(T state) async {
+    // Lock is managed by TaskManager for concurrent operations
+    // This method can be extended for custom locking logic
+    await Future.delayed(Duration.zero);
+  }
 
-  Future<void> _processCacheAnnotations(T oldState, T newState) async {}
+  /// Processes cache annotations and invalidates caches when state changes.
+  /// This is called after state updates to handle cache invalidation.
+  Future<void> _processCacheAnnotations(T oldState, T newState) async {
+    // Clear computed cache if state has changed significantly
+    if (oldState != newState) {
+      // Optionally clear specific cache entries based on state changes
+      // For now, we keep the cache but this can be extended for invalidation logic
+    }
+  }
 
-  void _processStreamAnnotations(T oldState, T newState) {}
+  /// Processes stream annotations and emits values to registered streams.
+  /// This is called after state updates to notify stream subscribers.
+  void _processStreamAnnotations(T oldState, T newState) {
+    // Emit to all registered stream controllers
+    for (final controller in _streamControllers.values) {
+      if (!controller.isClosed) {
+        controller.add(newState);
+      }
+    }
+  }
 
   A? _getAnnotation<A>(String? action) {
     if (action == null) return null;

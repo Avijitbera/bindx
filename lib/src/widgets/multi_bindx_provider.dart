@@ -1,4 +1,3 @@
-import 'package:bindx/src/core/bindx_store.dart';
 import 'package:bindx/src/widgets/bindx_provider.dart';
 import 'package:flutter/material.dart';
 
