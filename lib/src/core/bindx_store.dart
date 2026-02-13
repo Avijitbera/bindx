@@ -45,20 +45,25 @@ class BindXStore<T> extends ChangeNotifier {
     // Acquire lock for thread-safe updates
     await _acquireLock(oldState);
 
-    final result = await _taskManager.execute(
-      () => updater(oldState),
-      annotation: _getAnnotation<Concurrent>(action),
-    );
+    try {
+      final result = await _taskManager.execute(
+        () => updater(oldState),
+        annotation: _getAnnotation<Concurrent>(action),
+      );
 
-    _state = result;
+      _state = result;
 
-    // Process cache and stream annotations
-    await _processCacheAnnotations(oldState, _state);
-    _processStreamAnnotations(oldState, _state);
+      // Process cache and stream annotations
+      await _processCacheAnnotations(oldState, _state);
+      _processStreamAnnotations(oldState, _state);
 
-    if (notify) {
-      notifyListeners();
-      _stateController.add(_state);
+      if (notify) {
+        notifyListeners();
+        _stateController.add(_state);
+      }
+    } finally {
+      // Always release lock, even if an error occurred
+      _releaseLock();
     }
   }
 
@@ -104,18 +109,68 @@ class BindXStore<T> extends ChangeNotifier {
   /// Acquires a lock for thread-safe state updates.
   /// This can be used with @Mutex annotation for critical sections.
   Future<void> _acquireLock(T state) async {
-    // Lock is managed by TaskManager for concurrent operations
-    // This method can be extended for custom locking logic
-    await Future.delayed(Duration.zero);
+    // Generate a unique lock key based on the state type
+    final lockKey = '${T.toString()}_lock';
+
+    // Check if there's a Mutex annotation for this state
+    final mutexAnnotation = _getAnnotation<Mutex>('mutex');
+
+    if (mutexAnnotation != null) {
+      // Use annotation-specific lock key and timeout
+      await _taskManager.acquireLock(
+        mutexAnnotation.lockKey,
+        timeout: mutexAnnotation.timeout,
+      );
+    } else {
+      // Use default locking with the type-based key
+      await _taskManager.acquireLock(lockKey);
+    }
+  }
+
+  /// Releases the lock acquired during state updates.
+  /// This should always be called after _acquireLock to prevent deadlocks.
+  void _releaseLock() {
+    // Generate a unique lock key based on the state type
+    final lockKey = '${T.toString()}_lock';
+
+    // Check if there's a Mutex annotation for this state
+    final mutexAnnotation = _getAnnotation<Mutex>('mutex');
+
+    if (mutexAnnotation != null) {
+      // Release annotation-specific lock
+      _taskManager.releaseLock(mutexAnnotation.lockKey);
+    } else {
+      // Release default lock
+      _taskManager.releaseLock(lockKey);
+    }
   }
 
   /// Processes cache annotations and invalidates caches when state changes.
   /// This is called after state updates to handle cache invalidation.
   Future<void> _processCacheAnnotations(T oldState, T newState) async {
-    // Clear computed cache if state has changed significantly
-    if (oldState != newState) {
-      // Optionally clear specific cache entries based on state changes
-      // For now, we keep the cache but this can be extended for invalidation logic
+    // Only process if state has actually changed
+    if (oldState == newState) return;
+
+    // Clear the in-memory computed cache since state has changed
+    // This ensures getCached() always returns fresh computed values
+    _computedCache.clear();
+
+    // Check for Cache annotation with tag for selective invalidation
+    final cacheAnnotation = _getAnnotation<Cache>('cache');
+    if (cacheAnnotation?.tag != null) {
+      await _cacheEngine.invalidateByTag(cacheAnnotation!.tag!);
+    }
+
+    // Check for ReactiveCache annotation
+    final reactiveCacheAnnotation = _getAnnotation<ReactiveCache>(
+      'reactiveCache',
+    );
+    if (reactiveCacheAnnotation != null) {
+      // Invalidate caches based on dependencies
+      // Dependencies are property names that, when changed, should trigger cache invalidation
+      // The CacheEngine doesn't have a direct invalidate method for single keys
+      // For now, we rely on the computed cache being cleared above
+      // Future enhancement: implement selective invalidation per dependency
     }
   }
 

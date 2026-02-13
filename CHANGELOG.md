@@ -169,6 +169,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove unused imports and memory cache
 
 
+## [0.0.3] - 2026-02-14
+
+### Added
+- Updated pubspec.yaml
+- Implement `BindxStore` lifecycle methods for locking, caching, and streaming
+- Remove unused imports and memory cache
+
 ---
 
 ## Legend
