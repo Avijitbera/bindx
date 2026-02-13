@@ -23,7 +23,7 @@ Add BindX to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  bindx: ^0.0.1
+  bindx: ^0.0.3
 
 dev_dependencies:
   build_runner: ^2.4.0
